@@ -1,5 +1,4 @@
 from random import randint
-from tkinter import CENTER
 import pygame
 
 #GAME CONSTANTS
@@ -263,8 +262,8 @@ class MainMenuP2(mainMenuPlayers):
      
 
 #instantiate and add to group
-p1Menu = MainMenuP1(50, 50, pygame.image.load("img\player1.png").convert_alpha())
-p2Menu = MainMenuP2(100, 100, pygame.image.load("img\player2.png").convert_alpha())
+p1Menu = MainMenuP1(150, 200, pygame.image.load("img\player1.png").convert_alpha())
+p2Menu = MainMenuP2(250, 200, pygame.image.load("img\player2.png").convert_alpha())
 p1MenuGroup.add(p1Menu)
 p2MenuGroup.add(p2Menu)
 
