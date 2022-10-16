@@ -1,4 +1,4 @@
-# 2-Tris
+![](ReadMeImg/Banner.png)
 Download here: https://tdavies.itch.io/2-tris
 Sound Track here: https://on.soundcloud.com/KHoHy
 
