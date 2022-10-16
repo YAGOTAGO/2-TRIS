@@ -38,7 +38,7 @@ pygame.display.set_icon(pygame.image.load("img\Dandy_Icon.png").convert_alpha())
 
 #background
 backgroundImg = pygame.image.load("img\Game Board Window.png").convert_alpha()
-boardImg = pygame.image.load("img\Tetris Board (300 × 600 px).png").convert_alpha()
+boardImg = pygame.image.load("img\TetrisBoard.png").convert_alpha()
 
 #main menu player movememt
 pLeft = False
@@ -69,15 +69,15 @@ helpButton = pygame.image.load("img\MainMenu\HelpButton.png").convert_alpha()
 helpButtonRect = helpButton.get_rect(center = (WIDTH-50, 50))
 
 #help menu
-HowToPlayImg = pygame.image.load("img\HelpMenu\HowToPlay.png")
+HowToPlayImg = pygame.image.load("img\HelpMenu\HowToPlay.png").convert_alpha()
 HowToPlayRect = HowToPlayImg.get_rect(topleft = (0,0))
 
 #back button help menu
-backButHelp = pygame.image.load("img\HelpMenu\X.png")
+backButHelp = pygame.image.load("img\HelpMenu\X.png").convert_alpha()
 backButHelpRect = backButHelp.get_rect(center = (WIDTH-50,50))
 
 #Credits
-creditsBG = pygame.image.load("img\Credits.png")
+creditsBG = pygame.image.load("img\Credits.png").convert_alpha()
 creditsRect = creditsBG.get_rect(topleft = (0,0))
 
 #Main menu sprite groups
