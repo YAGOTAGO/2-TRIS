@@ -106,7 +106,8 @@ player2Group = pygame.sprite.GroupSingle()
 player1Group = pygame.sprite.GroupSingle()
 
 #game engine movement vars
-COOLDOWN = 20
+COOLDOWN = 30
+
 moveLeft = False
 moveRight = False
 turnPiece = False
@@ -447,6 +448,7 @@ class GameEngine():
 
     #Clears any full rows and updates the boardArr
     def clearRows(self):
+        global COOLDOWN
         rowsRemoved = 0
         rowIndex = 0
         size = 19   #Number of rows - 1
@@ -459,6 +461,8 @@ class GameEngine():
 
             #If there are 12 numbers (row is full and should be cleared)
             if tmp == 12:
+                if(COOLDOWN >= 10):
+                    COOLDOWN -= 2
                 self.board.pop(rowIndex)
                 rowIndex-= 1
                 size-=1
@@ -636,7 +640,7 @@ class sidePlayer(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("img\player2.png").convert_alpha()
         self.rect = self.image.get_rect(center = (WIDTH/2 + 163, 100))
-        self.maxCD = 30
+        self.maxCD = 20
         self.shootCD = self.maxCD
         self.dir = -1
         self.flipAmount = 325
@@ -685,7 +689,7 @@ class bottomPlayer(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("img\player1.png").convert_alpha()
         self.rect = self.image.get_rect(center = (WIDTH / 2, HEIGHT-40))
-        self.maxShootCD = 30
+        self.maxShootCD = 20
         self.shootCD = self.maxShootCD
 
     def move(self):
