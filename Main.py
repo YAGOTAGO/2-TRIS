@@ -1,5 +1,8 @@
 from random import randint
 import pygame
+import Players
+from Players import MainMenuP1, MainMenuP2, sidePlayer, bottomPlayer
+import BulletLogic
 
 #GAME CONSTANTS
 WIDTH  = 400
@@ -7,28 +10,8 @@ HEIGHT = 650
 FPS = 60
 game = None
 
-#initializes the pygame engine
+#Initializes the pygame engine
 pygame.init()
-
-
-#player movement
-p2MoveUp = False
-p2MoveDown = False
-
-#player movement
-p1MoveLeft = False
-p1MoveRight = False
-
-#shooting
-UpBulletShoot = False
-sideBulletShoot = False
-
-#player swapping sides
-playerIsRight = True
-playerTriggerSwitch = False
-
-#var
-playerSpeed = 4
 
 #display vars
 clock = pygame.time.Clock()
@@ -40,31 +23,24 @@ pygame.display.set_icon(pygame.image.load("img\Dandy_Icon.png").convert_alpha())
 backgroundImg = pygame.image.load("img\Game Board Window.png").convert_alpha()
 boardImg = pygame.image.load("img\TetrisBoard.png").convert_alpha()
 
-#main menu player movememt
-pLeft = False
-pUp = False
-pDown = False
-pRight = False
-
-p2Left = False
-p2Up = False
-p2Down = False
-p2Right = False
-
 #Main Menu background images
 mainMenuBG = pygame.image.load("img\MainMenuBG.png").convert_alpha()
 playButtonImg = pygame.image.load("img\MainMenu\PlayButton.png").convert_alpha()
 playButtonRect = playButtonImg.get_rect(center = (WIDTH/2,300))
 
+#Quit
 quitButton = pygame.image.load("img\MainMenu\QuitButton.png").convert_alpha()
 quitButtonRect = quitButton.get_rect(center = (WIDTH/2, 500))
 
+#Credits
 creditsButton = pygame.image.load("img\MainMenu\CreditsButton.png").convert_alpha()
 creditsButtonRect = creditsButton.get_rect(center = (WIDTH/2, 400))
 
+#Title
 titleImg = pygame.image.load("img\MainMenu\Title.png").convert_alpha()
 titleRect = titleImg.get_rect(center = (WIDTH/2, 100))
 
+#Help
 helpButton = pygame.image.load("img\MainMenu\HelpButton.png").convert_alpha()
 helpButtonRect = helpButton.get_rect(center = (WIDTH-50, 50))
 
@@ -80,10 +56,6 @@ backButHelpRect = backButHelp.get_rect(center = (WIDTH-50,50))
 creditsBG = pygame.image.load("img\Credits.png").convert_alpha()
 creditsRect = creditsBG.get_rect(topleft = (0,0))
 
-#Main menu sprite groups
-p1MenuGroup = pygame.sprite.GroupSingle()
-p2MenuGroup = pygame.sprite.GroupSingle()
-
 #Restart
 RestartImg = pygame.image.load("img\Restart.png").convert_alpha()
 RestartRect = RestartImg.get_rect(center = (WIDTH/2, 650))
@@ -96,21 +68,23 @@ MainMenuRect = MainMenuButton.get_rect(center = (WIDTH/2, 450))
 gameOverBG = pygame.image.load("img\Game Over.png").convert_alpha()
 gameGoing = True
 
-#Bullet groups
-UpBulletsGroup = pygame.sprite.Group()
-goingLeftBulletGroup = pygame.sprite.Group()
-goingRightBulletGroup = pygame.sprite.Group()
-
-#Game player groups
-player2Group = pygame.sprite.GroupSingle()
-player1Group = pygame.sprite.GroupSingle()
-
 #game engine movement vars
 COOLDOWN = 30
 
+#piece logic
 moveLeft = False
 moveRight = False
 turnPiece = False
+
+#Player groups for drawing and movement
+p1MenuGroup = pygame.sprite.GroupSingle()
+p2MenuGroup = pygame.sprite.GroupSingle()
+p1Menu = MainMenuP1(150, 200, pygame.image.load("img\player1.png").convert_alpha())
+p2Menu = MainMenuP2(250, 200, pygame.image.load("img\player2.png").convert_alpha())
+p1MenuGroup.add(p1Menu)
+p2MenuGroup.add(p2Menu)
+player2Group = pygame.sprite.GroupSingle()
+player1Group = pygame.sprite.GroupSingle()
 
 #Board array and tile mappings
 boardArr = [[-1,' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',-1],
@@ -215,63 +189,9 @@ def randBlockImage(i):
     elif i ==20:
         return pygame.image.load("Tetris Cubes Final\Yellow_Dog.png").convert_alpha()
 
-class mainMenuPlayers(pygame.sprite.Sprite):
-    def __init__(self, x, y, image):
-        super().__init__()
-        self.image = image
-        self.rect = self.image.get_rect(center = (x, y))
-        self.speed = playerSpeed
-
-
-#move using WASD
-class MainMenuP1(mainMenuPlayers):
-    def __init__(self, x, y, image):
-        super().__init__(x, y, image)
-    
-    def move(self):
-        if pLeft and self.rect.left>0:
-            self.rect.x -= self.speed
-        if pRight and self.rect.right<WIDTH:
-            self.rect.x += self.speed
-        if pDown and self.rect.bottom<HEIGHT:
-            self.rect.y += self.speed
-        if pUp and self.rect.top>0:
-            self.rect.y -= self.speed
-
-    
-    def update(self):
-        self.move()
-    
-
-#move using arrows
-class MainMenuP2(mainMenuPlayers):
-    def __init__(self, x, y, image):
-        super().__init__(x, y, image)
-    
-    def move(self):
-        if p2Left and self.rect.left>0:
-            self.rect.x -= self.speed
-        if p2Right and self.rect.right<WIDTH:
-            self.rect.x += self.speed
-        if p2Down and self.rect.bottom<HEIGHT:
-            self.rect.y += self.speed
-        if p2Up and self.rect.top>0:
-            self.rect.y -= self.speed
-    
-    def update(self):
-        self.move()
-     
-
-#instantiate and add to group
-p1Menu = MainMenuP1(150, 200, pygame.image.load("img\player1.png").convert_alpha())
-p2Menu = MainMenuP2(250, 200, pygame.image.load("img\player2.png").convert_alpha())
-p1MenuGroup.add(p1Menu)
-p2MenuGroup.add(p2Menu)
-
 
 def GameOverEventLoop():
-    global pUp, pDown, pLeft, pRight, p2Up, p2Down, p2Left, p2Right
-
+    
     if pygame.Rect.colliderect(p1Menu.rect, MainMenuRect):
         if pygame.Rect.colliderect(p2Menu.rect, MainMenuRect):
             p1Menu.rect.y = 100
@@ -289,55 +209,51 @@ def GameOverEventLoop():
             
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = True
+                Players.pUp = True
                 
-            
             if event.key == pygame.K_s:
-                pDown = True
+                Players.pDown = True
             
             if event.key == pygame.K_a:
-                pLeft = True
+                Players.pLeft = True
             
             if event.key == pygame.K_d:
-                pRight = True
+                Players.pRight = True
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = True
+                Players.p2Up = True
             
             if event.key == pygame.K_DOWN:
-                p2Down = True
+                Players.p2Down = True
             
             if event.key == pygame.K_LEFT:
-                p2Left = True
+                Players.p2Left = True
             
             if event.key == pygame.K_RIGHT:
-                p2Right = True
+                Players.p2Right = True
 
         if event.type == pygame.KEYUP:
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = False
+                Players.pUp = False
             if event.key == pygame.K_s:
-                pDown = False
+                Players.pDown = False
             if event.key == pygame.K_a:
-                pLeft = False
+                Players.pLeft = False
             if event.key == pygame.K_d:
-                pRight = False
+                Players.pRight = False
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = False
+                Players.p2Up = False
             if event.key == pygame.K_DOWN:
-                p2Down = False
+                Players.p2Down = False
             if event.key == pygame.K_LEFT:
-                p2Left = False
+               Players.p2Left = False
             if event.key == pygame.K_RIGHT:
-                p2Right = False
+                Players.p2Right = False
     
-    
-
-
 #Function to trigger game over screen
 def GameOver():
     global game
@@ -401,7 +317,6 @@ class Piece():
     #Update function for self
     def update(self):
         self.movePiece()
-
 
 #Class for storing individual square data
 class Pixel():
@@ -516,10 +431,10 @@ class GameEngine():
         self.rightMoveCD -=1
         self.leftMoveCD -=1
         for pixels in self.curPiece.pixelArr:
-            if(pygame.sprite.spritecollideany(pixels, goingRightBulletGroup) and self.rightMoveCD <= 0):
+            if(pygame.sprite.spritecollideany(pixels, BulletLogic.goingRightBulletGroup) and self.rightMoveCD <= 0):
                 moveRight = True
                 self.rightMoveCD = 15
-            elif(pygame.sprite.spritecollideany(pixels, goingLeftBulletGroup) and self.leftMoveCD <= 0):
+            elif(pygame.sprite.spritecollideany(pixels, BulletLogic.goingLeftBulletGroup) and self.leftMoveCD <= 0):
                 moveLeft = True
                 self.leftMoveCD = 15
 
@@ -547,7 +462,7 @@ class GameEngine():
 
         #Detects collision
         for pixels in self.curPiece.pixelArr:
-            if(pygame.sprite.spritecollideany(pixels, UpBulletsGroup) and self.upMoveCD <= 0):
+            if(pygame.sprite.spritecollideany(pixels, BulletLogic.UpBulletsGroup) and self.upMoveCD <= 0):
                 turnPiece = True
                 self.upMoveCD = 15
 
@@ -598,128 +513,14 @@ class GameEngine():
         self.rotate()
         self.drawStatic()
       
-
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.speed = 10
-        self.image = pygame.image.load("img\Flowerproj.png").convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.center = (x,y)
-    
-    #destroys out of bounds bullets
-    def OutOfBoundsKill(self):
-        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.top<0 or self.rect.top >HEIGHT:
-            self.kill()
-       
-#defines the bullet that moves up
-class UpBullet(Bullet):
-
-    def __init__(self, x, y):
-        super().__init__(x, y)
-
-    def update(self):
-        self.rect.y -= self.speed
-        self.OutOfBoundsKill()
-
-#defines bullets that move horizontally
-class SidewaysBullet(Bullet):
-
-    def __init__(self, x, y, dir):
-        super().__init__(x, y)
-        self.direction = dir
-
-    def update(self):
-        self.rect.x += (self.direction * self.speed)
-        self.OutOfBoundsKill()
-
-#Logic for player 2 (side player)
-class sidePlayer(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load("img\player2.png").convert_alpha()
-        self.rect = self.image.get_rect(center = (WIDTH/2 + 163, 100))
-        self.maxCD = 20
-        self.shootCD = self.maxCD
-        self.dir = -1
-        self.flipAmount = 325
-
-    def move(self):
-        if(p2MoveUp and self.rect.y >= 5):
-            self.rect.y -= playerSpeed
-
-        if (p2MoveDown and self.rect.y <= 550):
-            self.rect.y += playerSpeed
-
-    def switchSides(self):
-        global playerTriggerSwitch, playerIsRight
-        if playerTriggerSwitch:
-            self.image = pygame.transform.flip(self.image, True, False)
-            if(playerIsRight):
-                self.rect.x -= self.flipAmount
-                playerIsRight = False
-                self.dir = 1
-            else:
-                self.rect.x += self.flipAmount
-                playerIsRight = True
-                self.dir = -1
-
-            playerTriggerSwitch = False
-
-    def shoot(self):
-        self.shootCD -= 1
-        if sideBulletShoot and self.shootCD<0:
-            bullet = SidewaysBullet(self.rect.centerx, self.rect.centery, self.dir)
-            if self.dir == -1:
-                goingLeftBulletGroup.add(bullet)
-            else:
-                goingRightBulletGroup.add(bullet)
-
-            self.shootCD = self.maxCD
-
-    def update(self):
-        self.switchSides()
-        self.shoot()
-        self.move()
-
-#Logic for player 1 (bottom player)
-class bottomPlayer(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load("img\player1.png").convert_alpha()
-        self.rect = self.image.get_rect(center = (WIDTH / 2, HEIGHT-40))
-        self.maxShootCD = 20
-        self.shootCD = self.maxShootCD
-
-    def move(self):
-        if(p1MoveLeft and self.rect.x >= (WIDTH / 2) - 155):
-            self.rect.x -= playerSpeed
-
-        if(p1MoveRight and self.rect.x <= (WIDTH / 2) + 115):
-            self.rect.x += playerSpeed
-
-    def shoot(self):
-        self.shootCD -= 1
-        if UpBulletShoot and self.shootCD<0:
-            self.shootCD = self.maxShootCD
-            bullet = UpBullet(self.rect.centerx, self.rect.centery)
-            UpBulletsGroup.add(bullet)
-
-    def update(self):
-        self.shoot()
-        self.move()
-        
-
 player2 = sidePlayer()
 player2Group.add(player2)
 
 player1 = bottomPlayer()
 player1Group.add(player1)
 
-
 def eventLoop():
-    global p2MoveUp, p2MoveDown, p1MoveLeft, p1MoveRight, playerTriggerSwitch, UpBulletShoot, sideBulletShoot, moveLeft, moveRight, turnPiece
+    global moveLeft, moveRight, turnPiece
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -729,65 +530,63 @@ def eventLoop():
         if event.type == pygame.KEYDOWN:
             
             if event.key == pygame.K_w:
-                UpBulletShoot = True
+                BulletLogic.UpBulletShoot = True
             
             #move up
             if event.key == pygame.K_UP:
-                p2MoveUp = True
+                Players.p2MoveUp = True
            
             #move down
             if event.key == pygame.K_DOWN:
-                p2MoveDown = True
+                Players.p2MoveDown = True
                 
             #move left
             if event.key == pygame.K_a:
-                p1MoveLeft = True
+                Players.p1MoveLeft = True
 
             #move right
             if event.key == pygame.K_d:
-                p1MoveRight = True
+                Players.p1MoveRight = True
 
             #switch player side
             if event.key == pygame.K_SPACE:
-                playerTriggerSwitch = True
+                Players.playerTriggerSwitch = True
             
             #shoot Horizontally
             if event.key == pygame.K_LEFT:
-                sideBulletShoot = True
+                BulletLogic.sideBulletShoot = True
 
             if event.key == pygame.K_RIGHT:
-                sideBulletShoot = True
+                BulletLogic.sideBulletShoot = True
 
             
         if event.type == pygame.KEYUP:
 
             #Upwards bullets shooting
             if event.key == pygame.K_w:
-                UpBulletShoot = False
+                BulletLogic.UpBulletShoot = False
 
             if event.key == pygame.K_UP:
-                p2MoveUp = False
+                Players.p2MoveUp = False
 
             if event.key == pygame.K_DOWN:
-                p2MoveDown = False
+                Players.p2MoveDown = False
 
             #move left
             if event.key == pygame.K_a:
-                p1MoveLeft = False
+                Players.p1MoveLeft = False
             #move right
             if event.key == pygame.K_d:
-                p1MoveRight = False
+                Players.p1MoveRight = False
 
             #shoot horizontally
             if event.key == pygame.K_LEFT:
-                sideBulletShoot = False
+                BulletLogic.sideBulletShoot = False
             
             if event.key == pygame.K_RIGHT:
-                sideBulletShoot = False
-
+                BulletLogic.sideBulletShoot = False
 
 def mainMenuEventLoop():
-    global pUp, pDown, pLeft, pRight, p2Up, p2Down, p2Left, p2Right
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -798,52 +597,52 @@ def mainMenuEventLoop():
             
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = True
+                Players.pUp = True
             
             if event.key == pygame.K_s:
-                pDown = True
+                Players.pDown = True
             
             if event.key == pygame.K_a:
-                pLeft = True
+                Players.pLeft = True
             
             if event.key == pygame.K_d:
-                pRight = True
+                Players.pRight = True
 
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = True
+                Players.p2Up = True
             
             if event.key == pygame.K_DOWN:
-                p2Down = True
+                Players.p2Down = True
             
             if event.key == pygame.K_LEFT:
-                p2Left = True
+                Players.p2Left = True
             
             if event.key == pygame.K_RIGHT:
-                p2Right = True
+                Players.p2Right = True
 
         if event.type == pygame.KEYUP:
             
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = False
+                Players.pUp = False
             if event.key == pygame.K_s:
-                pDown = False
+                Players.pDown = False
             if event.key == pygame.K_a:
-                pLeft = False
+                Players.pLeft = False
             if event.key == pygame.K_d:
-                pRight = False
+                Players.pRight = False
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = False
+                Players.p2Up = False
             if event.key == pygame.K_DOWN:
-                p2Down = False
+                Players.p2Down = False
             if event.key == pygame.K_LEFT:
-                p2Left = False
+                Players.p2Left = False
             if event.key == pygame.K_RIGHT:
-                p2Right = False
+                Players.p2Right = False
 
     if pygame.Rect.colliderect(p1Menu.rect, helpButtonRect):
         if pygame.Rect.colliderect(p2Menu.rect, helpButtonRect):
@@ -855,7 +654,7 @@ def mainMenuEventLoop():
 
     if pygame.Rect.colliderect(p1Menu.rect, playButtonRect):
         if pygame.Rect.colliderect(p2Menu.rect, playButtonRect):
-            pUp = pDown= pLeft= pRight= p2Up = p2Down = p2Left =p2Right= False
+            Players.pUp = Players.pDown= Players.pLeft= Players.pRight= Players.p2Up = Players.p2Down = Players.p2Left = Players.p2Right= False
             GameLoop()
     
     if pygame.Rect.colliderect(p1Menu.rect, creditsButtonRect):
@@ -867,7 +666,6 @@ def mainMenuEventLoop():
               exit()        
 
 def HelpMenuEventLoop():
-    global pUp, pDown, pLeft, pRight, p2Up, p2Down, p2Left, p2Right
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -877,52 +675,51 @@ def HelpMenuEventLoop():
             
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = True
+                Players.pUp = True
                 
-            
             if event.key == pygame.K_s:
-                pDown = True
+                Players.pDown = True
             
             if event.key == pygame.K_a:
-                pLeft = True
+                Players.pLeft = True
             
             if event.key == pygame.K_d:
-                pRight = True
+                Players.pRight = True
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = True
+                Players.p2Up = True
             
             if event.key == pygame.K_DOWN:
-                p2Down = True
+                Players.p2Down = True
             
             if event.key == pygame.K_LEFT:
-                p2Left = True
+                Players.p2Left = True
             
             if event.key == pygame.K_RIGHT:
-                p2Right = True
+                Players.p2Right = True
 
         if event.type == pygame.KEYUP:
         
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = False
+                Players.pUp = False
             if event.key == pygame.K_s:
-                pDown = False
+                Players.pDown = False
             if event.key == pygame.K_a:
-                pLeft = False
+                Players.pLeft = False
             if event.key == pygame.K_d:
-                pRight = False
+                Players.pRight = False
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = False
+                Players.p2Up = False
             if event.key == pygame.K_DOWN:
-                p2Down = False
+                Players.p2Down = False
             if event.key == pygame.K_LEFT:
-                p2Left = False
+                Players.p2Left = False
             if event.key == pygame.K_RIGHT:
-                p2Right = False
+                Players.p2Right = False
 
     if pygame.Rect.colliderect(p1Menu.rect, backButHelpRect):
         if pygame.Rect.colliderect(p2Menu.rect, backButHelpRect):
@@ -981,7 +778,6 @@ def MainMenu():
         clock.tick(FPS)
 
 def CreditsEventLoop():
-    global pUp, pDown, pLeft, pRight, p2Up, p2Down, p2Left, p2Right
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -991,58 +787,57 @@ def CreditsEventLoop():
             
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = True
+                Players.pUp = True
                 
             
             if event.key == pygame.K_s:
-                pDown = True
+                Players.pDown = True
             
             if event.key == pygame.K_a:
-                pLeft = True
+                Players.pLeft = True
             
             if event.key == pygame.K_d:
-                pRight = True
+                Players.pRight = True
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = True
+                Players.p2Up = True
             
             if event.key == pygame.K_DOWN:
-                p2Down = True
+                Players.p2Down = True
             
             if event.key == pygame.K_LEFT:
-                p2Left = True
+                Players.p2Left = True
             
             if event.key == pygame.K_RIGHT:
-                p2Right = True
+                Players.p2Right = True
 
         if event.type == pygame.KEYUP:
             #move using wasd
             if event.key == pygame.K_w:
-                pUp = False
+                Players.pUp = False
             if event.key == pygame.K_s:
-                pDown = False
+                Players.pDown = False
             if event.key == pygame.K_a:
-                pLeft = False
+                Players.pLeft = False
             if event.key == pygame.K_d:
-                pRight = False
+                Players.pRight = False
 
             #move using arrow keys
             if event.key == pygame.K_UP:
-                p2Up = False
+                Players.p2Up = False
             if event.key == pygame.K_DOWN:
-                p2Down = False
+                Players.p2Down = False
             if event.key == pygame.K_LEFT:
-                p2Left = False
+                Players.p2Left = False
             if event.key == pygame.K_RIGHT:
-                p2Right = False
+                Players.p2Right = False
 
     if pygame.Rect.colliderect(p1Menu.rect, backButHelpRect):
         if pygame.Rect.colliderect(p2Menu.rect, backButHelpRect):
             p2Menu.rect.x = WIDTH/2
             p1Menu.rect.x = WIDTH/2
             MainMenu()
-
 
 def Credits():
     while True:
@@ -1060,7 +855,6 @@ def Credits():
 
         pygame.display.update()
         clock.tick(FPS)
-
 
 cd = COOLDOWN
 def fallUpdate(game):
@@ -1105,14 +899,14 @@ def GameLoop():
         player2Group.update()
         player2Group.draw(screen)
 
-        UpBulletsGroup.update()
-        UpBulletsGroup.draw(screen)
+        BulletLogic.UpBulletsGroup.update()
+        BulletLogic.UpBulletsGroup.draw(screen)
 
-        goingLeftBulletGroup.update()
-        goingLeftBulletGroup.draw(screen)
+        BulletLogic.goingLeftBulletGroup.update()
+        BulletLogic.goingLeftBulletGroup.draw(screen)
 
-        goingRightBulletGroup.update()
-        goingRightBulletGroup.draw(screen)
+        BulletLogic.goingRightBulletGroup.update()
+        BulletLogic.goingRightBulletGroup.draw(screen)
 
         pygame.display.update()
         clock.tick(FPS)
