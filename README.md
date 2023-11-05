@@ -18,7 +18,6 @@ We made this game for DandyHacks'22, which lasted 42 hours. Upon being judged by
 In the menu screen use the WASD and Arrow Keys to guide the two player onto a button. For the how to play menu bring both players to the question mark in the top right.
 
 ## Game Screenshots
-![](ReadMeImg/Menu.png)
-![](ReadMeImg/Help.png)
+c![](ReadMeImg/Help.png)
 ![](ReadMeImg/Gameplay.png)
 ![](ReadMeImg/Credits.png)
